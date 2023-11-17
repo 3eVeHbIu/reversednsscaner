@@ -1,6 +1,7 @@
 # reverse dns scanner bash/powershell scripts
 ### Usage
 #### bash
+![2023-11-18_00-57](https://github.com/sergo2048/reversednsscaner/assets/40056618/b71b9aa2-a575-44ff-9319-9efbc11a9f6b)
 
 *help*
 ```
@@ -16,6 +17,8 @@ For example:
 ```
 
 #### powershell
+![2023-11-18_00-56](https://github.com/sergo2048/reversednsscaner/assets/40056618/aba7de06-37d9-4547-866d-e0ba31f20b15)
+
 ```powershell
 .\reversednsscan.ps1 -ip "10.10.10.10" -mask 23 -server "10.10.10.1"
 ```
