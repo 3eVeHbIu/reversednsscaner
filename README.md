@@ -1,33 +1,39 @@
-# reverse dns scanner bash/powershell scripts
-### Usage
-#### bash
-![2023-11-18_00-57](https://github.com/sergo2048/reversednsscaner/assets/40056618/b71b9aa2-a575-44ff-9319-9efbc11a9f6b)
+# Reverse DNS scanner (bash/powershell scripts)
+## Overview
+Welcome to the ReverseDNSScaner Repository! This set of scripts provides a convenient solution for scanning networks using reverse DNS lookups. You can use these scripts when examining the segment being tested, provided that reverse DNS queries are enabled.
+The main advantage is that the scripts use native methods and do not require the installation of additional utilities (powershell for Windows, bash for Linux).
 
-*help*
+You can use this script directly on the infected machine, without installing additional software, unlike in dnsrecon and hakrevdns.
+
+## Usage
+### bash
 ```
 Usage: ./reversednsscan.sh <ipaddress> <mask> [OPTIONS]
 Options:
  -h --help      Display this help message
- -d --dns       Specify a dns server address
+ -s --server    Specify a dns server address
  -o --output    Save output to file
+ -d --debug     Enable debug mode
 
 For example:
 ./reversednsscan.sh 10.10.10.10 30
-./reversednsscan.sh 192.168.1.0 24 -d 192.168.1.1 -f output.txt
+./reversednsscan.sh 192.168.1.0 24 -s 192.168.1.1 -f output.txt
 ```
 
-#### powershell
+***output:***
+![2023-11-18_00-57](https://github.com/sergo2048/reversednsscaner/assets/40056618/b71b9aa2-a575-44ff-9319-9efbc11a9f6b)
+
+
+### powershell
+```powershell
+.\reversednsscan.ps1 -ip 10.10.10.10 -mask 23 -server 10.10.10.1
+```
+
+***output:***
 ![2023-11-18_00-56](https://github.com/sergo2048/reversednsscaner/assets/40056618/aba7de06-37d9-4547-866d-e0ba31f20b15)
 
-```powershell
-.\reversednsscan.ps1 -ip "10.10.10.10" -mask 23 -server "10.10.10.1"
-```
 
----
-### TODO 
-* сделать проверку что утилита host доступна если нет выход с сообщением как пофиксить 
-* сделать параметры по умолчанию для bash и для powershell скрипта (по умолчанию dns сервер и адрес и сеть одного из интерфейсов)
-* сделать вывод в файл для powerxhell
-* сделать обработчик ошибок для параметорв в powershell
-* Сделать чтобы можно было импортировать powershell как модуль 
-* Добавить debug mode
+## Issues and Support
+If you encounter any issues or have questions, please open an issue on the GitHub repository. We'll do our best to assist you.
+
+Happy scanning! 🌐✨

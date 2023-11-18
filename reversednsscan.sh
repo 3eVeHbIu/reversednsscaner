@@ -5,6 +5,7 @@ DNS=""
 FILE=""
 IP=""
 MASK=""
+DEBUG=""
 
 
 usage() 
@@ -12,8 +13,9 @@ usage()
   echo "Usage: $0 <ipaddress> <mask> [OPTIONS]"
   echo "Options:"
   echo " -h --help      Display this help message"
-  echo " -d --dns       Specify a dns server address"
+  echo " -s --server    Specify a dns server address"
   echo " -o --output    Save output to file"
+  echo " -d --debug     Enable debug mode"
   echo
   echo "For example:"
   echo "$0 10.10.10.10 30"
@@ -42,17 +44,10 @@ int2ip()
 }
 
 
-netmask()
-{
-  local mask=$((0xffffffff << (32 - $1))); shift
-  int2ip $mask
-}
-
-
 broadcast()
 {
   local addr=$(ip2int $1); shift
-  local mask=$((0xffffffff << (32 -$1))); shift
+  local mask=$((0xffffffff << (32 - $1))); shift
   int2ip $((addr | ~mask))
 }
 
@@ -60,7 +55,7 @@ broadcast()
 network()
 {
   local addr=$(ip2int $1); shift
-  local mask=$((0xffffffff << (32 -$1))); shift
+  local mask=$((0xffffffff << (32 - $1))); shift
   int2ip $((addr & mask))
 }
 
@@ -78,11 +73,15 @@ get_all_addresses_in_network()
 
 reverse_dns_host()
 {
-    trap ctrl_c INT
-
-  host $1 $DNS | grep "domain name pointer " \
-   |  awk -F'.' '{printf $4"."$3"."$2"."$1" ";  for (i=5; i<=NF-1; i++) printf $i".";}' \
-   | awk '{print $1"\t"$NF}' |  rev | cut -c2- | rev
+  trap ctrl_c INT
+  if [[ -n $DEBUG ]]
+  then    
+    host $1 $DNS
+  else
+    host $1 $DNS | grep "domain name pointer " \
+    |  awk -F'.' '{printf $4"."$3"."$2"."$1" ";  for (i=5; i<=NF-1; i++) printf $i".";}' \
+    | awk '{print $1"\t"$NF}' |  rev | cut -c2- | rev
+  fi
 }
 
 function ctrl_c() {
@@ -103,7 +102,8 @@ valid_ip()
 {
   local  ip=$1
   local  stat=1
-  if [[ $ip =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]]; then
+  if [[ $ip =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]]
+  then
     OIFS=$IFS
     IFS='.'
     ip=($ip)
@@ -122,27 +122,33 @@ exit_abnormal() {
 
 
 main(){
-    if (( $MASK == 31 ))
-    then
-        reverse_dns_host $(network $IP $MASK)
-        reverse_dns_host $(broadcast $IP $MASK)
-    elif (( $MASK == 32 ))
-    then
-        reverse_dns_host $IP
-    else
-        reverse_dns_scan $IP $MASK
-    fi 
+  if (( $MASK == 31 ))
+  then
+    reverse_dns_host $(network $IP $MASK)
+    reverse_dns_host $(broadcast $IP $MASK)
+  elif (( $MASK == 32 ))
+  then
+    reverse_dns_host $IP
+  else
+    reverse_dns_scan $IP $MASK
+  fi 
 }
 
 
-while [[ $# -gt 0 ]]; do
+while [[ $# -gt 0 ]]
+do
   case $1 in
     -h|--help)
       exit_abnormal
       ;;
-    -d|--dns)
+    -d|--debug)
+      DEBUG="true"
+      shift
+      ;;
+    -s|--server)
       DNS=$2
-      if valid_ip $DNS; then
+      if valid_ip $DNS
+      then
         :
       else
         echo "Invalid DNS value ($DNS) should be ip address" 
@@ -157,17 +163,20 @@ while [[ $# -gt 0 ]]; do
     *)
       IP="$1"
       MASK="$2"
-      if valid_ip $IP; then
+      if valid_ip $IP
+      then
         :
       else
         echo "Invalid IP value ($IP) should be ip address" 
         exit_abnormal
       fi
-      if ! [[ $MASK =~ ^[0-9]+$ ]]; then
+      if ! [[ $MASK =~ ^[0-9]+$ ]]
+      then
         echo "Invalid mask value ($MASK)" 
         exit_abnormal
       fi
-      if ! (( a >= 0 && $MASK <= 32 )); then
+      if ! (( a >= 0 && $MASK <= 32 ))
+      then
         echo "Invalid mask value ($MASK)" 
         exit_abnormal
       fi
@@ -178,14 +187,18 @@ done
 
 if ! [[ -n $IP && -n $MASK ]]
 then
-    echo "You should set ip and mask value"
-    exit_abnormal
+  echo "You should set ip and mask value"
+  exit_abnormal
 fi
 
+if ! [[ -n $DNS ]]
+then
+  DNS=$(cat /etc/resolv.conf  | grep -v "#" | grep "nameserver" | head -n 1 | cut -d" " -f2)
+fi
 
 if [[ -n $FILE ]]
 then
-    main | tee $FILE
+  main | tee $FILE
 else
-    main
+  main
 fi
