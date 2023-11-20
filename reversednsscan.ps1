@@ -1,7 +1,7 @@
 param (
-    [IPAddress]$ip,
-    [int]$mask,
-    [String]$server
+    [IPAddress]$ip = [System.Net.Dns]::GetHostAddresses($env:COMPUTERNAME)[0],
+    [int]$mask = (Get-NetIPAddress -InterfaceAlias (Get-NetRoute -DestinationPrefix 0.0.0.0/0).InterfaceAlias | Where-Object {$_.AddressFamily -eq 'IPv4'}).PrefixLength,
+    [String]$server = (Get-DnsClientServerAddress | Where-Object {$_.InterfaceAlias -eq (Get-NetAdapter | Where-Object {$_.Status -eq 'Up'}).InterfaceAlias}).ServerAddresses[0]
 )
 
 function Convert-IPToBytes {
@@ -28,22 +28,22 @@ function Convert-BytesToIP {
 
 function Get-MaskBytes {
     param (
-        [int]$prefixLength
+        [int]$mask
     )
-    if ($prefixLength -lt 0 -or $prefixLength -gt 32) {
+    if ($mask -lt 0 -or $mask -gt 32) {
         Write-Host "Error mask should be between 0 32."
         return
     }
-    return (0xffffffff -shl (32 - $prefixLength))
+    return (0xffffffff -shl (32 - $mask))
 }
 
 function Get-NetworkBroadcast {
     param (
         [IPAddress]$ip,
-        [int]$prefixLength
+        [int]$mask
     )
     $IPBytes = Convert-IPToBytes -ip $ip
-    $MaskBytes =  Get-MaskBytes -prefixLength $prefixLength
+    $MaskBytes =  Get-MaskBytes -mask $mask
     $GatewayBytes = $(( $IPBytes -bor (-bnot $MaskBytes)))
     return Convert-BytesToIP -bytesIP $GatewayBytes
 }
@@ -51,10 +51,10 @@ function Get-NetworkBroadcast {
 function Get-NetworkIP {
     param (
         [IPAddress]$ip,
-        [int]$prefixLength
+        [int]$mask
     )
     $IPBytes = Convert-IPToBytes -ip $ip
-    $MaskBytes =  Get-MaskBytes -prefixLength $prefixLength
+    $MaskBytes =  Get-MaskBytes -mask $mask
     $NetworkBytes = $(( $IPBytes -band ( $MaskBytes)))
     return Convert-BytesToIP -bytesIP $NetworkBytes
 }
@@ -62,11 +62,11 @@ function Get-NetworkIP {
 function Get-AllAdressesInNetwork(){
     param (
         [IPAddress]$ip,
-        [int]$prefixLength
+        [int]$mask
     )
-    $network = Get-NetworkIP -ip $ip -prefixLength $mask
+    $network = Get-NetworkIP -ip $ip -mask $mask
     $networkBytes = Convert-IPToBytes -ip $network
-    $gateway = Get-NetworkBroadcast -ip $ip -prefixLength $mask
+    $gateway = Get-NetworkBroadcast -ip $ip -mask $mask
     $gatewayBytes = Convert-IPToBytes -ip $gateway
     $start = $networkBytes + 1
     $end = $gatewayBytes -1
@@ -80,7 +80,7 @@ function Get-AllAdressesInNetwork(){
 function ReverseDNSQuery(){
     param (
         [IPAddress]$ip,
-        [String]$server
+        [String]$server = (Get-DnsClientServerAddress | Where-Object {$_.InterfaceAlias -eq (Get-NetAdapter | Where-Object {$_.Status -eq 'Up'}).InterfaceAlias}).ServerAddresses[0]
     
     )
     $dnsResult = Resolve-DnsName $ip -NoRecursion -QuickTimeout -DnsOnly -Server $server 2>$null 
@@ -90,13 +90,14 @@ function ReverseDNSQuery(){
     }
 }
 
-function Scan-ReserseDNSNetwork(){
+function Scan-ReserseDNS(){
     param (
-        [IPAddress]$ip,
-        [int]$prefixLength,
-        [String]$server
+        [IPAddress]$ip = [System.Net.Dns]::GetHostAddresses($env:COMPUTERNAME)[0],
+        [int]$mask = (Get-NetIPAddress -InterfaceAlias (Get-NetRoute -DestinationPrefix 0.0.0.0/0).InterfaceAlias | Where-Object {$_.AddressFamily -eq 'IPv4'}).PrefixLength,
+        [String]$server = (Get-DnsClientServerAddress | Where-Object {$_.InterfaceAlias -eq (Get-NetAdapter | Where-Object {$_.Status -eq 'Up'}).InterfaceAlias}).ServerAddresses[0]
+
     )
-    $ipList = Get-AllAdressesInNetwork -ip $ip -prefixLength $mask
+    $ipList = Get-AllAdressesInNetwork -ip $ip -mask $mask
 
     $resultArray = @()
     foreach ($ip in $ipList) {
@@ -105,4 +106,12 @@ function Scan-ReserseDNSNetwork(){
     $resultArray | Format-Table -AutoSize
 }
 
-Scan-ReserseDNSNetwork -ip $ip -prefixLength $mask -server $server
+if ($MyInvocation.InvocationName -eq ".\reversednsscan.ps1" -or $MyInvocation.InvocationName -eq "reversednsscan.ps1"){
+    Scan-ReserseDNS -ip $ip -mask $mask -server $server
+}
+
+if ($MyInvocation.MyCommand.CommandType -eq "Module")
+{
+    Export-ModuleMember -Function ReverseDNSQuery
+    Export-ModuleMember -Function Scan-ReserseDNS
+}

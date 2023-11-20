@@ -25,8 +25,42 @@ For example:
 
 
 ### powershell
+**params:**
+-ip - address from the subnet to scan (default value is network interface address)
+-mask - subnet mask for scanning (default value is network interface mask)
+-server - dns server address (default value is default dns server ip)
+
+**usage:**
+You can use the utility as a powershell script 
 ```powershell
 .\reversednsscan.ps1 -ip 10.10.10.10 -mask 23 -server 10.10.10.1
+```
+
+```powershell
+.\reversednsscan.ps1 -mask 24
+```
+
+or as a powershell module:
+```powershell
+Import-Module .\reversednsscan.ps1
+```
+
+then the ReverseDNSQuery and Scan-ReserseDNS functions will become available to you.
+
+* ReverseDNSQuery sends a reverse DNS request to the server
+* Scan-ReserseDNS scans the network in the same way as the reversednsscan script
+
+**usage:**
+```powershell
+Scan-ReserseDNS -mask 24
+```
+
+```powershell
+Scan-ReserseDNS -ip 10.10.10.10 -mask 25
+```
+
+```powershell
+ReverseDNSQuery -ip 8.8.8.8 -server 8.8.8.8
 ```
 
 ***output:***
