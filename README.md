@@ -21,6 +21,7 @@ For example:
 ```
 
 ***output:***
+
 ![2023-11-18_00-57](https://github.com/sergo2048/reversednsscaner/assets/40056618/b71b9aa2-a575-44ff-9319-9efbc11a9f6b)
 
 
@@ -39,6 +40,9 @@ You can use the utility as a powershell script
 ```powershell
 .\reversednsscan.ps1 -mask 24
 ```
+
+*Example output*
+![2023-11-20_15-22](https://github.com/3eVeHbIu/reversednsscaner/assets/40056618/7643b22a-64e1-489f-a155-3b15f8355850)
 
 or as a powershell module:
 ```powershell
@@ -63,8 +67,8 @@ Scan-ReserseDNS -ip 10.10.10.10 -mask 25
 ReverseDNSQuery -ip 8.8.8.8 -server 8.8.8.8
 ```
 
-***output:***
-![2023-11-18_00-56](https://github.com/sergo2048/reversednsscaner/assets/40056618/aba7de06-37d9-4547-866d-e0ba31f20b15)
+*Example output*
+![2023-11-20_15-23](https://github.com/3eVeHbIu/reversednsscaner/assets/40056618/3c057d27-3b49-41c7-a84c-11accd8a31fa)
 
 
 ## Issues and Support
