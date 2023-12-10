@@ -1,7 +1,7 @@
 #!/bin/bash
 
 
-DNS=""
+DNS=$(cat /etc/resolv.conf  | grep -v "#" | grep "nameserver" | head -n 1 | cut -d" " -f2)
 FILE=""
 IP=""
 MASK=""
@@ -189,11 +189,6 @@ if ! [[ -n $IP && -n $MASK ]]
 then
   echo "You should set ip and mask value"
   exit_abnormal
-fi
-
-if ! [[ -n $DNS ]]
-then
-  DNS=$(cat /etc/resolv.conf  | grep -v "#" | grep "nameserver" | head -n 1 | cut -d" " -f2)
 fi
 
 if [[ -n $FILE ]]

@@ -90,7 +90,7 @@ function ReverseDNSQuery(){
     }
 }
 
-function Scan-ReserseDNS(){
+function Scan-ReverseDNS(){
     param (
         [IPAddress]$ip = [System.Net.Dns]::GetHostAddresses($env:COMPUTERNAME)[0],
         [int]$mask = (Get-NetIPAddress -InterfaceAlias (Get-NetRoute -DestinationPrefix 0.0.0.0/0).InterfaceAlias | Where-Object {$_.AddressFamily -eq 'IPv4'}).PrefixLength,
@@ -107,11 +107,11 @@ function Scan-ReserseDNS(){
 }
 
 if ($MyInvocation.InvocationName -eq ".\reversednsscan.ps1" -or $MyInvocation.InvocationName -eq "reversednsscan.ps1"){
-    Scan-ReserseDNS -ip $ip -mask $mask -server $server
+    Scan-ReverseDNS -ip $ip -mask $mask -server $server
 }
 
 if ($MyInvocation.MyCommand.CommandType -eq "Module")
 {
     Export-ModuleMember -Function ReverseDNSQuery
-    Export-ModuleMember -Function Scan-ReserseDNS
+    Export-ModuleMember -Function Scan-ReverseDNS
 }
